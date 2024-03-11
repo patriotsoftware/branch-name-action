@@ -1,2 +1,2 @@
-# branch-name-action
-Gets branch name from GitHub run 
+# extract-from-zip-action
+Gets a file or folder from zip with all contents 
