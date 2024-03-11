@@ -1,0 +1,35 @@
+name: 'Windows Extract from Zip'
+author: DevOps
+description: Windows Extract file/folder from zip
+
+inputs:
+  zip-path:
+    description: 'Helm Namespace'
+    required: true   
+  extract-path:
+    description: 'Path to file/folder to extract relative to zip'
+    required: true
+  destination-path:
+    description: 'Destination path'
+    required: false
+    default: '.\'
+    
+runs:
+  using: 'composite'
+  steps:
+    - name: Extract file/folder
+      shell: powershell
+      run: |
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $zip = [System.IO.Compression.ZipFile]::OpenRead("${{ inputs.zip-path }}")
+        $zip.Entries | Where-Object { $_.FullName -like "${{ inputs.extract-path }}/*" } |
+        ForEach-Object { 
+          $root = Join-Path ${{ inputs.destination-path }} $_.FullName
+          if (-not (Test-Path $(Split-Path -Path $root -Parent))) {
+              New-Item $(Split-Path -Path $root -Parent) -Type Directory -Force | Out-Null
+          }
+          if (-not $_.FullName.EndsWith("/")) {
+              [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $root, $true)
+          }
+        }
+        $zip.Dispose()
